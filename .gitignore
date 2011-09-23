@@ -1,0 +1,13 @@
+build_*/
+data
+.settings
+.project
+.cproject
+._*
+build/
+*.pyc
+.pydevproject
+*~
+bin
+lib
+.svn*
