@@ -2,6 +2,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
 PROJECT(g2o)
 
+add_definitions("-Wno-unused-parameter")
 # The library prefix
 SET(LIB_PREFIX g2o_)
 
