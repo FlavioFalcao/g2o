@@ -14,4 +14,3 @@ link_ecto(g2o
   core
 )
 
-
