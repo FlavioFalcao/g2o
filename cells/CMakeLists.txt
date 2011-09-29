@@ -12,6 +12,8 @@ ectomodule(g2o
 
 link_ecto(g2o
   core
+  solver_cholmod
+  types_icp
 )
 
-
+install_ecto_module(g2o)

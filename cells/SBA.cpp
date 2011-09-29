@@ -70,25 +70,30 @@ namespace g2o
     static void
     declare_io(const tendrils& params, tendrils& inputs, tendrils& outputs)
     {
-      inputs.declare<Eigen::SparseMatrix<Eigen::Vector3i> >("matches", "The n_view by n_points matrix with 3 channels.").required(
+      inputs.declare<Eigen::SparseMatrix<int> >("x", "The n_view by n_points matrix of x.").required(true);
+      inputs.declare<Eigen::SparseMatrix<int> >("y", "The n_view by n_points matrix of y.").required(true);
+      inputs.declare<Eigen::SparseMatrix<int> >("disparity", "The n_view by n_points matrix of disparity.").required(
           true);
       inputs.declare<std::vector<Eigen::Quaterniond> >("quaternions", "The initial estimates of the camera rotations.").required(
           true);
       inputs.declare<std::vector<Eigen::Vector3d> >("Ts", "The initial estimates of the camera translations.").required(
           true);
       inputs.declare<Eigen::Matrix3d>("K", "The intrinsic parameter matrix.").required(true);
-      inputs.declare<std::vector<Eigen::Vector3d> >("point_estimates", "The stacked descriptors.").required(true);
+      inputs.declare<std::vector<Eigen::Vector3d> >("points", "The estimated 3d points.").required(true);
+
       outputs.declare<std::vector<Eigen::Vector3d> >("points", "The optimized positions of the points.");
     }
 
     void
     configure(const ecto::tendrils& params, const ecto::tendrils& inputs, const ecto::tendrils& outputs)
     {
-      matches_ = inputs["matches"];
-      quaternions_ = inputs["Rs"];
+      x_ = inputs["x"];
+      y_ = inputs["y"];
+      disparity_ = inputs["disparity"];
+      quaternions_ = inputs["quaternions"];
       Ts_ = inputs["Ts"];
       K_ = inputs["K"];
-      point_estimates_ = inputs["point_estimates"];
+      point_estimates_ = inputs["points"];
     }
 
     int
@@ -114,8 +119,6 @@ namespace g2o
 
       double baseline = 0.075; // 7.5 cm baseline
 
-      vector<g2o::SE3Quat, aligned_allocator<g2o::SE3Quat> > pose_estimates;
-
       // set up camera params
       g2o::VertexSCam::setKcam((*K_)(0, 0), (*K_)(1, 1), (*K_)(0, 2), (*K_)(1, 2), baseline);
 
@@ -132,17 +135,13 @@ namespace g2o
         v_se3->setAll(); // set aux transforms
 
         optimizer.addVertex(v_se3);
-        pose_estimates.push_back(pose);
         vertex_id++;
       }
 
       int point_id = vertex_id;
-      int point_num = 0;
-      double sum_diff2 = 0;
 
       cout << endl;
       tr1::unordered_map<int, int> pointid_2_trueid;
-      tr1::unordered_set<int> inliers;
 
       // add point projections to this vertex
       for (size_t i = 0; i < point_estimates_->size(); ++i)
@@ -153,11 +152,11 @@ namespace g2o
         v_p->setMarginalized(true);
         v_p->estimate() = point_estimates_->at(i);
 
-        for (size_t j = 0; j < pose_estimates.size(); ++j)
+        for (size_t j = 0; j < quaternions_->size(); ++j)
         {
-          // TODO check whether the point is visible in that view
-          Vector3d z;
-          dynamic_cast<g2o::VertexSCam*>(optimizer.vertices().find(j)->second)->mapPoint(z, point_estimates_->at(i));
+          // check whether the point is visible in that view
+          if ((x_->coeff(j, i) == 0) && (y_->coeff(j, i) == 0) && (disparity_->coeff(j, i) == 0))
+            continue;
 
           g2o::Edge_XYZ_VSC * e = new g2o::Edge_XYZ_VSC();
 
@@ -165,6 +164,7 @@ namespace g2o
 
           e->vertices()[1] = dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertices().find(j)->second);
 
+          Vector3d z(x_->coeff(j, i), y_->coeff(j, i), disparity_->coeff(j, i));
           e->measurement() = z;
           e->inverseMeasurement() = -z;
           e->information() = Matrix3d::Identity();
@@ -174,7 +174,6 @@ namespace g2o
           e->setHuberWidth(1);
 
           optimizer.addEdge(e);
-
         }
 
         optimizer.addVertex(v_p);
@@ -182,8 +181,6 @@ namespace g2o
         pointid_2_trueid.insert(make_pair(point_id, i));
 
         ++point_id;
-        ++point_num;
-
       }
 
       cout << endl;
@@ -195,18 +192,11 @@ namespace g2o
 
       cout << endl;
       cout << "Performing full BA:" << endl;
-      optimizer.optimize(10);
-
-      cout << endl;
-      cout << "Point error before optimisation (inliers only): " << sqrt(sum_diff2 / point_num) << endl;
-
-      point_num = 0;
-      sum_diff2 = 0;
+      optimizer.optimize(1);
 
       std::vector<Eigen::Vector3d> final_points(point_estimates_->size());
       for (tr1::unordered_map<int, int>::iterator it = pointid_2_trueid.begin(); it != pointid_2_trueid.end(); ++it)
       {
-
         g2o::HyperGraph::VertexIDMap::iterator v_it = optimizer.vertices().find(it->first);
 
         if (v_it == optimizer.vertices().end())
@@ -223,19 +213,7 @@ namespace g2o
           exit(-1);
         }
         final_points[it->second] = v_p->estimate();
-
-        Vector3d diff = v_p->estimate() - (*point_estimates_)[it->second];
-
-        if (inliers.find(it->first) == inliers.end())
-          continue;
-
-        sum_diff2 += diff.dot(diff);
-
-        ++point_num;
       }
-
-      cout << "Point error after optimisation (inliers only): " << sqrt(sum_diff2 / point_num) << endl;
-      cout << endl;
 
       // Return the right positions of the points
       outputs["points"] << final_points;
@@ -243,7 +221,9 @@ namespace g2o
       return ecto::OK;
     }
   private:
-    ecto::spore<Eigen::SparseMatrix<Eigen::Vector3i> > matches_;
+    ecto::spore<Eigen::SparseMatrix<int> > x_;
+    ecto::spore<Eigen::SparseMatrix<int> > y_;
+    ecto::spore<Eigen::SparseMatrix<int> > disparity_;
     ecto::spore<std::vector<Eigen::Quaterniond> > quaternions_;
     ecto::spore<std::vector<Eigen::Vector3d> > Ts_;
     ecto::spore<Eigen::Matrix3d> K_;
