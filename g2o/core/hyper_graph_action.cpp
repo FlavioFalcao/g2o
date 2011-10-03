@@ -146,7 +146,7 @@ namespace g2o {
       }
     }
     if (! collection) {
-      cerr << __PRETTY_FUNCTION__ << ": creating collection for \"" << action->name() << "\"" << endl;
+      //cerr << __PRETTY_FUNCTION__ << ": creating collection for \"" << action->name() << "\"" << endl;
       collection = new HyperGraphElementActionCollection(action->name());
       _actionMap.insert(make_pair(action->name(), collection));
     }
