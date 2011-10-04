@@ -213,8 +213,13 @@ namespace g2o
           exit(-1);
         }
         final_points[it->second] = v_p->estimate();
+<<<<<<< HEAD
         // TODO delete the following line
         final_points[it->second] = point_estimates_->at(it->second);
+=======
+        // TODO, remove the following
+        final_points[it->second] = (*point_estimates_)[it->second];
+>>>>>>> 3dce8f153f34bc0192360b61df578666fd5ec410
       }
 
       // Return the right positions of the points
