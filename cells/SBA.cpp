@@ -140,7 +140,6 @@ namespace g2o
 
       int point_id = vertex_id;
 
-      cout << endl;
       tr1::unordered_map<int, int> pointid_2_trueid;
 
       // add point projections to this vertex
@@ -183,14 +182,12 @@ namespace g2o
         ++point_id;
       }
 
-      cout << endl;
       optimizer.initializeOptimization();
 
       optimizer.setVerbose(true);
 
       g2o::StructureOnlySolver<3> structure_only_ba;
 
-      cout << endl;
       cout << "Performing full BA:" << endl;
       optimizer.optimize(1);
 
