@@ -57,16 +57,133 @@ using ecto::tendrils;
 
 namespace g2o
 {
+  void
+  sba_process_impl(const Eigen::SparseMatrix<int> &x, const Eigen::SparseMatrix<int> & y,
+                   const Eigen::SparseMatrix<int> & disparity, const Eigen::Matrix3d & K,
+                   const std::vector<Eigen::Quaterniond> & quaternions, const std::vector<Eigen::Vector3d> & Ts,
+                   std::vector<Eigen::Vector3d> & point_estimates)
+  {
+    g2o::SparseOptimizer optimizer;
+    optimizer.setMethod(g2o::SparseOptimizer::LevenbergMarquardt);
+    optimizer.setVerbose(false);
+    g2o::BlockSolver_6_3::LinearSolverType * linearSolver;
+    if (0)
+    {
+      linearSolver = new g2o::LinearSolverDense<g2o::BlockSolver_6_3::PoseMatrixType>();
+    }
+    else
+    {
+      linearSolver = new g2o::LinearSolverCholmod<g2o::BlockSolver_6_3::PoseMatrixType>();
+    }
+
+    g2o::BlockSolver_6_3 * solver_ptr = new g2o::BlockSolver_6_3(&optimizer, linearSolver);
+
+    optimizer.setSolver(solver_ptr);
+
+    double baseline = 0.075; // 7.5 cm baseline
+
+    // set up camera params
+    g2o::VertexSCam::setKcam(K(0, 0), K(1, 1), K(0, 2), K(1, 2), baseline);
+
+    // set up the camera vertices
+    unsigned int vertex_id = 0;
+    for (size_t i = 0; i < quaternions.size(); ++i)
+    {
+      g2o::SE3Quat pose(quaternions[i], Ts[i]);
+
+      g2o::VertexSCam * v_se3 = new g2o::VertexSCam();
+
+      v_se3->setId(vertex_id);
+      v_se3->estimate() = pose;
+      v_se3->setAll(); // set aux transforms
+
+      optimizer.addVertex(v_se3);
+      vertex_id++;
+    }
+
+    int point_id = vertex_id;
+
+    tr1::unordered_map<int, int> pointid_2_trueid;
+
+    // add point projections to this vertex
+    for (size_t i = 0; i < point_estimates.size(); ++i)
+    {
+      g2o::VertexPointXYZ * v_p = new g2o::VertexPointXYZ();
+
+      v_p->setId(point_id);
+      v_p->setMarginalized(true);
+      v_p->estimate() = point_estimates.at(i);
+
+      for (size_t j = 0; j < quaternions.size(); ++j)
+      {
+        // check whether the point is visible in that view
+        if ((x.coeff(j, i) == 0) && (y.coeff(j, i) == 0) && (disparity.coeff(j, i) == 0))
+          continue;
+
+        g2o::Edge_XYZ_VSC * e = new g2o::Edge_XYZ_VSC();
+
+        e->vertices()[0] = dynamic_cast<g2o::OptimizableGraph::Vertex*>(v_p);
+
+        e->vertices()[1] = dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertices().find(j)->second);
+
+        Vector3d z(x.coeff(j, i), y.coeff(j, i), disparity.coeff(j, i));
+        e->measurement() = z;
+        e->inverseMeasurement() = -z;
+        e->information() = Matrix3d::Identity();
+
+        // TODO
+        //e->setRobustKernel(ROBUST_KERNEL);
+        e->setHuberWidth(1);
+
+        optimizer.addEdge(e);
+      }
+
+      optimizer.addVertex(v_p);
+
+      pointid_2_trueid.insert(make_pair(point_id, i));
+
+      ++point_id;
+    }
+
+    optimizer.initializeOptimization();
+
+    optimizer.setVerbose(true);
+
+    g2o::StructureOnlySolver<3> structure_only_ba;
+
+    cout << "Performing full BA:" << endl;
+    optimizer.optimize(5);
+
+    std::vector<Eigen::Vector3d> final_points(point_estimates.size());
+    for (tr1::unordered_map<int, int>::iterator it = pointid_2_trueid.begin(); it != pointid_2_trueid.end(); ++it)
+    {
+      g2o::HyperGraph::VertexIDMap::iterator v_it = optimizer.vertices().find(it->first);
+
+      if (v_it == optimizer.vertices().end())
+      {
+        cerr << "Vertex " << it->first << " not in graph!" << endl;
+        exit(-1);
+      }
+
+      g2o::VertexPointXYZ * v_p = dynamic_cast<g2o::VertexPointXYZ *>(v_it->second);
+
+      if (v_p == 0)
+      {
+        cerr << "Vertex " << it->first << "is not a PointXYZ!" << endl;
+        exit(-1);
+      }
+      final_points[it->second] = v_p->estimate();
+      // TODO delete the following line
+      //final_points[it->second] = point_estimates_->at(it->second);
+    }
+
+    // Return the right positions of the points
+    point_estimates = final_points;
+  }
+
   struct SBA
   {
   public:
-    /*
-     static void
-     declare_params(ecto::tendrils& params)
-     {
-     }
-     */
-
     static void
     declare_io(const tendrils& params, tendrils& inputs, tendrils& outputs)
     {
@@ -99,126 +216,10 @@ namespace g2o
     int
     process(const tendrils& inputs, const tendrils& outputs)
     {
-
-      g2o::SparseOptimizer optimizer;
-      optimizer.setMethod(g2o::SparseOptimizer::LevenbergMarquardt);
-      optimizer.setVerbose(false);
-      g2o::BlockSolver_6_3::LinearSolverType * linearSolver;
-      if (0)
-      {
-        linearSolver = new g2o::LinearSolverDense<g2o::BlockSolver_6_3::PoseMatrixType>();
-      }
-      else
-      {
-        linearSolver = new g2o::LinearSolverCholmod<g2o::BlockSolver_6_3::PoseMatrixType>();
-      }
-
-      g2o::BlockSolver_6_3 * solver_ptr = new g2o::BlockSolver_6_3(&optimizer, linearSolver);
-
-      optimizer.setSolver(solver_ptr);
-
-      double baseline = 0.075; // 7.5 cm baseline
-
-      // set up camera params
-      g2o::VertexSCam::setKcam((*K_)(0, 0), (*K_)(1, 1), (*K_)(0, 2), (*K_)(1, 2), baseline);
-
-      // set up the camera vertices
-      unsigned int vertex_id = 0;
-      for (size_t i = 0; i < quaternions_->size(); ++i)
-      {
-        g2o::SE3Quat pose((*quaternions_)[i], (*Ts_)[i]);
-
-        g2o::VertexSCam * v_se3 = new g2o::VertexSCam();
-
-        v_se3->setId(vertex_id);
-        v_se3->estimate() = pose;
-        v_se3->setAll(); // set aux transforms
-
-        optimizer.addVertex(v_se3);
-        vertex_id++;
-      }
-
-      int point_id = vertex_id;
-
-      tr1::unordered_map<int, int> pointid_2_trueid;
-
-      // add point projections to this vertex
-      for (size_t i = 0; i < point_estimates_->size(); ++i)
-      {
-        g2o::VertexPointXYZ * v_p = new g2o::VertexPointXYZ();
-
-        v_p->setId(point_id);
-        v_p->setMarginalized(true);
-        v_p->estimate() = point_estimates_->at(i);
-
-        for (size_t j = 0; j < quaternions_->size(); ++j)
-        {
-          // check whether the point is visible in that view
-          if ((x_->coeff(j, i) == 0) && (y_->coeff(j, i) == 0) && (disparity_->coeff(j, i) == 0))
-            continue;
-
-          g2o::Edge_XYZ_VSC * e = new g2o::Edge_XYZ_VSC();
-
-          e->vertices()[0] = dynamic_cast<g2o::OptimizableGraph::Vertex*>(v_p);
-
-          e->vertices()[1] = dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertices().find(j)->second);
-
-          Vector3d z(x_->coeff(j, i), y_->coeff(j, i), disparity_->coeff(j, i));
-          e->measurement() = z;
-          e->inverseMeasurement() = -z;
-          e->information() = Matrix3d::Identity();
-
-          // TODO
-          //e->setRobustKernel(ROBUST_KERNEL);
-          e->setHuberWidth(1);
-
-          optimizer.addEdge(e);
-        }
-
-        optimizer.addVertex(v_p);
-
-        pointid_2_trueid.insert(make_pair(point_id, i));
-
-        ++point_id;
-      }
-
-      optimizer.initializeOptimization();
-
-      optimizer.setVerbose(true);
-
-      g2o::StructureOnlySolver<3> structure_only_ba;
-
-      cout << "Performing full BA:" << endl;
-      optimizer.optimize(1);
-
-      std::vector<Eigen::Vector3d> final_points(point_estimates_->size());
-      for (tr1::unordered_map<int, int>::iterator it = pointid_2_trueid.begin(); it != pointid_2_trueid.end(); ++it)
-      {
-        g2o::HyperGraph::VertexIDMap::iterator v_it = optimizer.vertices().find(it->first);
-
-        if (v_it == optimizer.vertices().end())
-        {
-          cerr << "Vertex " << it->first << " not in graph!" << endl;
-          exit(-1);
-        }
-
-        g2o::VertexPointXYZ * v_p = dynamic_cast<g2o::VertexPointXYZ *>(v_it->second);
-
-        if (v_p == 0)
-        {
-          cerr << "Vertex " << it->first << "is not a PointXYZ!" << endl;
-          exit(-1);
-        }
-        final_points[it->second] = v_p->estimate();
-        // TODO delete the following line
-        final_points[it->second] = point_estimates_->at(it->second);
-      }
-
-      // Return the right positions of the points
-      outputs["points"] << final_points;
-
+      sba_process_impl(*x_, *y_, *disparity_, *K_, *quaternions_, *Ts_, *point_estimates_);
       return ecto::OK;
     }
+
   private:
     ecto::spore<Eigen::SparseMatrix<int> > x_;
     ecto::spore<Eigen::SparseMatrix<int> > y_;
