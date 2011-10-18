@@ -36,27 +36,12 @@
 #ifndef SBA_H_
 #define SBA_H_
 
-
-#include <Eigen/StdVector>
-#include <tr1/random>
-#include <iostream>
-#include <stdint.h>
-#include <tr1/unordered_set>
 #include <vector>
-
-#include "g2o/core/graph_optimizer_sparse.h"
-#include "g2o/core/block_solver.h"
-#include "g2o/core/solver.h"
-#include "g2o/solvers/cholmod/linear_solver_cholmod.h"
-#include "g2o/solvers/cholmod/linear_solver_cholmod.h"
-#include "g2o/solvers/dense/linear_solver_dense.h"
-#include "g2o/types/icp/types_icp.h"
-#include "g2o/core/structure_only_solver.h"
-
+#include <Eigen/Geometry>
 #include <Eigen/Sparse>
+#include <Eigen/StdVector>
+
 #define EIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET
-using namespace std;
-using namespace Eigen;
 
 namespace g2o
 {
@@ -64,7 +49,8 @@ namespace g2o
   sba_process_impl(const Eigen::SparseMatrix<int> &x, const Eigen::SparseMatrix<int> & y,
                    const Eigen::SparseMatrix<int> & disparity, const Eigen::Matrix3d & K,
                    const std::vector<Eigen::Quaterniond> & quaternions, const std::vector<Eigen::Vector3d> & Ts,
-                   std::vector<Eigen::Vector3d> & point_estimates);
+                   const std::vector<Eigen::Vector3d> & in_point_estimates,
+                   std::vector<Eigen::Vector3d> & out_point_estimates);
 }
 
 #endif /* SBA_H_ */

@@ -33,17 +33,11 @@
  *
  */
 
-#include <vector>
 #include <tr1/unordered_set>
 
 #include <ecto/ecto.hpp>
 
 #include <Eigen/Core>
-#include <Eigen/Geometry>
-#include <Eigen/Geometry>
-#define EIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET
-#include <Eigen/Sparse>
-#include <Eigen/StdVector>
 
 #include "g2o/core/block_solver.h"
 #include "g2o/core/graph_optimizer_sparse.h"
@@ -53,6 +47,8 @@
 #include "g2o/solvers/dense/linear_solver_dense.h"
 #include "g2o/types/icp/types_icp.h"
 
+#include "g2o/sba.h"
+
 using ecto::tendrils;
 
 namespace g2o
@@ -61,7 +57,8 @@ namespace g2o
   sba_process_impl(const Eigen::SparseMatrix<int> &x, const Eigen::SparseMatrix<int> & y,
                    const Eigen::SparseMatrix<int> & disparity, const Eigen::Matrix3d & K,
                    const std::vector<Eigen::Quaterniond> & quaternions, const std::vector<Eigen::Vector3d> & Ts,
-                   std::vector<Eigen::Vector3d> & point_estimates)
+                   const std::vector<Eigen::Vector3d> & in_point_estimates,
+                   std::vector<Eigen::Vector3d> & out_point_estimates)
   {
     g2o::SparseOptimizer optimizer;
     optimizer.setMethod(g2o::SparseOptimizer::LevenbergMarquardt);
@@ -106,14 +103,29 @@ namespace g2o
     tr1::unordered_map<int, int> pointid_2_trueid;
 
     // add point projections to this vertex
-    for (size_t i = 0; i < point_estimates.size(); ++i)
+    for (size_t i = 0; i < in_point_estimates.size(); ++i)
     {
       g2o::VertexPointXYZ * v_p = new g2o::VertexPointXYZ();
 
       v_p->setId(point_id);
       v_p->setMarginalized(true);
-      v_p->estimate() = point_estimates.at(i);
+      v_p->estimate() = in_point_estimates.at(i);
 
+      // First, make sure, the point is visible in several views
+      {
+        unsigned int count = 0;
+        for (size_t j = 0; j < quaternions.size(); ++j)
+        {
+          if ((x.coeff(j, i) == 0) && (y.coeff(j, i) == 0) && (disparity.coeff(j, i) == 0))
+            continue;
+          ++count;
+          if (count >= 2)
+            break;
+        }
+        if (count < 2)
+          continue;
+      }
+      // Add the different views to the optimizer
       for (size_t j = 0; j < quaternions.size(); ++j)
       {
         // check whether the point is visible in that view
@@ -154,7 +166,8 @@ namespace g2o
     cout << "Performing full BA:" << endl;
     optimizer.optimize(5);
 
-    std::vector<Eigen::Vector3d> final_points(point_estimates.size());
+    // Set the computed points in the final data structure
+    out_point_estimates = in_point_estimates.size();
     for (tr1::unordered_map<int, int>::iterator it = pointid_2_trueid.begin(); it != pointid_2_trueid.end(); ++it)
     {
       g2o::HyperGraph::VertexIDMap::iterator v_it = optimizer.vertices().find(it->first);
@@ -172,13 +185,12 @@ namespace g2o
         cerr << "Vertex " << it->first << "is not a PointXYZ!" << endl;
         exit(-1);
       }
-      final_points[it->second] = v_p->estimate();
+      out_point_estimates[it->second] = v_p->estimate();
       // TODO delete the following line
       //final_points[it->second] = point_estimates_->at(it->second);
     }
 
-    // Return the right positions of the points
-    point_estimates = final_points;
+    // Set the unchange
   }
 
   struct SBA
@@ -210,7 +222,8 @@ namespace g2o
       quaternions_ = inputs["quaternions"];
       Ts_ = inputs["Ts"];
       K_ = inputs["K"];
-      point_estimates_ = inputs["points"];
+      in_point_estimates_ = inputs["points"];
+      out_point_estimates_ = outputs["points"];
     }
 
     int
@@ -227,7 +240,8 @@ namespace g2o
     ecto::spore<std::vector<Eigen::Quaterniond> > quaternions_;
     ecto::spore<std::vector<Eigen::Vector3d> > Ts_;
     ecto::spore<Eigen::Matrix3d> K_;
-    ecto::spore<std::vector<Eigen::Vector3d> > point_estimates_;
+    ecto::spore<std::vector<Eigen::Vector3d> > in_point_estimates_;
+    ecto::spore<std::vector<Eigen::Vector3d> > out_point_estimates_;
   };
 }
 
