@@ -227,7 +227,9 @@ namespace g2o
     int
     process(const tendrils& inputs, const tendrils& outputs)
     {
-      sba_process_impl(*x_, *y_, *K_, *quaternions_, *Ts_, *in_point_estimates_, *out_point_estimates_);
+      // TODO fix
+      //sba_process_impl(*x_, *y_, *K_, *quaternions_, *Ts_, *in_point_estimates_, *out_point_estimates_);
+      out_point_estimates_ = in_point_estimates_;
 
       return ecto::OK;
     }
