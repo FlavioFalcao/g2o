@@ -4,7 +4,7 @@ if(NOT GTEST_FOUND)
   message(STATUS "Disabling testing since gtest was not found.")
   return()
 endif()
-return()
+
 include_directories(${GTEST_INCLUDE_DIRS})
 
 add_executable(g2o_test
@@ -19,4 +19,4 @@ target_link_libraries(g2o_test
   g2o_ectomodule
   )
 
-add_test(g2o_tests ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/g2o_test)
+# add_test(g2o_tests ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/g2o_test)
