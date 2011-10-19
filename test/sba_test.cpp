@@ -119,16 +119,19 @@ TEST(g2o, SBA)
   double sum_diff2 = 0;
 
   // add point projections to this vertex
-  Eigen::SparseMatrix<int> x;
-  Eigen::SparseMatrix<int> y;
-  std::vector<Eigen::Vector3d> in_point_estimates;
-  for (size_t i = 0; i < true_points.size(); ++i)
+  unsigned int n_points = true_points.size();
+  unsigned int n_views = true_cameras.size();
+  std::cout << "n: " << n_points << " " << n_views << std::endl;
+  Eigen::SparseMatrix<int> x(n_views, n_points);
+  Eigen::SparseMatrix<int> y(n_views, n_points);
+  std::vector<Eigen::Vector3d> in_point_estimates(n_points);
+  for (size_t i = 0; i < n_points; ++i)
   {
     Eigen::Vector3d estimate = true_points.at(i)
                                + Eigen::Vector3d(Sample::gaussian(1), Sample::gaussian(1), Sample::gaussian(1));
     in_point_estimates[i] = estimate;
 
-    for (size_t j = 0; j < true_cameras.size(); ++j)
+    for (size_t j = 0; j < n_views; ++j)
     {
       Eigen::Vector3d z;
       true_cameras[j].mapPoint(z, true_points.at(i));
