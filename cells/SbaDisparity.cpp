@@ -245,4 +245,4 @@ namespace g2o
   };
 }
 
-ECTO_CELL(g2o, g2o::SbaDisparity, "SbaDisparity", "Stack 3d points and descriptors but by cleaning them")
+ECTO_CELL(g2o, g2o::SbaDisparity, "SbaDisparity", "Perform bundle adjustment on 2d input data with disparity")

@@ -54,8 +54,7 @@ using ecto::tendrils;
 namespace g2o
 {
   void
-  sba_process_impl(const Eigen::SparseMatrix<int> &x, const Eigen::SparseMatrix<int> & y,
-                   const Eigen::SparseMatrix<int> & disparity, const Eigen::Matrix3d & K,
+  sba_process_impl(const Eigen::SparseMatrix<int> &x, const Eigen::SparseMatrix<int> & y, const Eigen::Matrix3d & K,
                    const std::vector<Eigen::Quaterniond> & quaternions, const std::vector<Eigen::Vector3d> & Ts,
                    const std::vector<Eigen::Vector3d> & in_point_estimates,
                    std::vector<Eigen::Vector3d> & out_point_estimates)
@@ -116,7 +115,7 @@ namespace g2o
         unsigned int count = 0;
         for (size_t j = 0; j < quaternions.size(); ++j)
         {
-          if ((x.coeff(j, i) == 0) && (y.coeff(j, i) == 0) && (disparity.coeff(j, i) == 0))
+          if ((x.coeff(j, i) == 0) && (y.coeff(j, i) == 0))
             continue;
           ++count;
           if (count >= 2)
@@ -129,19 +128,19 @@ namespace g2o
       for (size_t j = 0; j < quaternions.size(); ++j)
       {
         // check whether the point is visible in that view
-        if ((x.coeff(j, i) == 0) && (y.coeff(j, i) == 0) && (disparity.coeff(j, i) == 0))
+        if ((x.coeff(j, i) == 0) && (y.coeff(j, i) == 0))
           continue;
 
-        g2o::Edge_XYZ_VSC * e = new g2o::Edge_XYZ_VSC();
+        g2o::EdgeProjectP2MC * e = new g2o::EdgeProjectP2MC();
 
         e->vertices()[0] = dynamic_cast<g2o::OptimizableGraph::Vertex*>(v_p);
 
         e->vertices()[1] = dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertices().find(j)->second);
 
-        Vector3d z(x.coeff(j, i), y.coeff(j, i), disparity.coeff(j, i));
+        Vector2d z(x.coeff(j, i), y.coeff(j, i));
         e->measurement() = z;
         e->inverseMeasurement() = -z;
-        e->information() = Matrix3d::Identity();
+        e->information() = Matrix2d::Identity();
 
         // TODO
         //e->setRobustKernel(ROBUST_KERNEL);
@@ -167,7 +166,7 @@ namespace g2o
     optimizer.optimize(5);
 
     // Set the computed points in the final data structure
-    out_point_estimates = in_point_estimates.size();
+    out_point_estimates = in_point_estimates;
     for (tr1::unordered_map<int, int>::iterator it = pointid_2_trueid.begin(); it != pointid_2_trueid.end(); ++it)
     {
       g2o::HyperGraph::VertexIDMap::iterator v_it = optimizer.vertices().find(it->first);
@@ -193,7 +192,7 @@ namespace g2o
     // Set the unchange
   }
 
-  struct SBA
+  struct Sba
   {
   public:
     static void
@@ -218,7 +217,6 @@ namespace g2o
     {
       x_ = inputs["x"];
       y_ = inputs["y"];
-      disparity_ = inputs["disparity"];
       quaternions_ = inputs["quaternions"];
       Ts_ = inputs["Ts"];
       K_ = inputs["K"];
@@ -229,14 +227,14 @@ namespace g2o
     int
     process(const tendrils& inputs, const tendrils& outputs)
     {
-      sba_process_impl(*x_, *y_, *disparity_, *K_, *quaternions_, *Ts_, *point_estimates_);
+      sba_process_impl(*x_, *y_, *K_, *quaternions_, *Ts_, *in_point_estimates_, *out_point_estimates_);
+
       return ecto::OK;
     }
 
   private:
     ecto::spore<Eigen::SparseMatrix<int> > x_;
     ecto::spore<Eigen::SparseMatrix<int> > y_;
-    ecto::spore<Eigen::SparseMatrix<int> > disparity_;
     ecto::spore<std::vector<Eigen::Quaterniond> > quaternions_;
     ecto::spore<std::vector<Eigen::Vector3d> > Ts_;
     ecto::spore<Eigen::Matrix3d> K_;
@@ -245,4 +243,4 @@ namespace g2o
   };
 }
 
-ECTO_CELL(g2o, g2o::SBA, "SBA", "Stack 3d points and descriptors but by cleaning them")
+ECTO_CELL(g2o, g2o::Sba, "Sba", "Perform bundle adjustment on 2d input data")

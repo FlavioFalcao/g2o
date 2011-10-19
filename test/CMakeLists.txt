@@ -15,6 +15,8 @@ add_executable(g2o-test
 target_link_libraries(g2o-test
   ${GTEST_LIBRARIES}
   pthread
+  core solver_cholmod math_groups types_sba types_slam3d types_icp ${OPENGL_LIBRARIES} ${CHOLMOD_LIBRARIES}
+  g2o_ectomodule
   )
 
 add_test(g2o_tests ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/g2o-test)
