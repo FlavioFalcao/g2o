@@ -118,7 +118,7 @@ TEST(g2o, SBA)
     true_cameras.push_back(v_se3);
   }
 
-  double sum_diff2 = 0;
+  double sum_diff1 = 0;
 
   // add point projections to this vertex
   unsigned int n_points = true_points.size();
@@ -145,27 +145,29 @@ TEST(g2o, SBA)
 
         z += Eigen::Vector3d(Sample::gaussian(PIXEL_NOISE), Sample::gaussian(PIXEL_NOISE),
                              Sample::gaussian(PIXEL_NOISE / 16.0));
-        x.coeffRef(j, i) = z[0];
-        y.coeffRef(j, i) = z[1];
-        disparity.coeffRef(j, i) = z[2];
+        x.insert(j, i) = z[0];
+        y.insert(j, i) = z[1];
+        disparity.insert(j, i) = z[2];
       }
-
-      Eigen::Vector3d diff = estimate - true_points[i];
-
-      sum_diff2 += diff.dot(diff);
     }
 
+    Eigen::Vector3d diff = estimate - true_points[i];
+    sum_diff1 += diff.dot(diff);
   }
 
   std::vector<Eigen::Vector3d> out_point_estimates;
   g2o::sba_process_impl(x, y, disparity, K, quaternions, Ts, in_point_estimates, out_point_estimates);
-  /*
-   std::cout << "Point error before optimisation (inliers only): " << sqrt(sum_diff2 / point_num) << std::endl;
 
-   point_num = 0;
-   sum_diff2 = 0;
+  std::cout << "Point error before optimization : " << sqrt(sum_diff1 / n_points) << std::endl;
 
-   std::cout << "Point error after optimisation (inliers only): " << sqrt(sum_diff2 / point_num) << std::endl
-   << std::endl;*/
+  double sum_diff2 = 0;
 
+  for (size_t i = 0; i < n_points; ++i)
+  {
+    Eigen::Vector3d diff = out_point_estimates[i] - true_points[i];
+    sum_diff2 += diff.dot(diff);
+  }
+
+  std::cout << "Point error after optimization : " << sqrt(sum_diff2 / n_points) << std::endl << std::endl;
+  EXPECT_LE(sum_diff2, sum_diff1);
 }
