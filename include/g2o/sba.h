@@ -44,6 +44,9 @@
 
 namespace g2o
 {
+  typedef std::vector<Eigen::Quaterniond, Eigen::aligned_allocator<Eigen::Quaterniond> > VectorQuaterniond;
+  typedef std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d> > VectorVector3d;
+
   void
   sba_process_impl(const Eigen::SparseMatrix<int> &x, const Eigen::SparseMatrix<int> & y,
                    const Eigen::SparseMatrix<int> & disparity, const Eigen::Matrix3d & K,

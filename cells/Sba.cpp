@@ -51,9 +51,6 @@
 
 using ecto::tendrils;
 
-typedef std::vector<Eigen::Quaterniond, Eigen::aligned_allocator<Eigen::Quaterniond> > VectorQuaterniond;
-typedef std::vector<Eigen::Quaterniond, Eigen::aligned_allocator<Eigen::Vector3d> > VectorVector3d;
-
 namespace g2o
 {
   void

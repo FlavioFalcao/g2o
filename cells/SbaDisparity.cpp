@@ -40,9 +40,6 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
-typedef std::vector<Eigen::Quaterniond, Eigen::aligned_allocator<Eigen::Quaterniond> > VectorQuaterniond;
-typedef std::vector<Eigen::Quaterniond, Eigen::aligned_allocator<Eigen::Vector3d> > VectorVector3d;
-
 #include "g2o/core/block_solver.h"
 #include "g2o/core/graph_optimizer_sparse.h"
 #include "g2o/core/solver.h"
