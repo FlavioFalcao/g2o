@@ -51,13 +51,15 @@
 
 using ecto::tendrils;
 
+typedef std::vector<Eigen::Quaterniond, Eigen::aligned_allocator<Eigen::Quaterniond> > VectorQuaterniond;
+typedef std::vector<Eigen::Quaterniond, Eigen::aligned_allocator<Eigen::Vector3d> > VectorVector3d;
+
 namespace g2o
 {
   void
   sba_process_impl(const Eigen::SparseMatrix<int> &x, const Eigen::SparseMatrix<int> & y, const Eigen::Matrix3d & K,
-                   const std::vector<Eigen::Quaterniond> & quaternions, const std::vector<Eigen::Vector3d> & Ts,
-                   const std::vector<Eigen::Vector3d> & in_point_estimates,
-                   std::vector<Eigen::Vector3d> & out_point_estimates)
+                   const VectorQuaterniond & quaternions, const VectorVector3d & Ts,
+                   const VectorVector3d & in_point_estimates, VectorVector3d & out_point_estimates)
   {
     g2o::SparseOptimizer optimizer;
     optimizer.setMethod(g2o::SparseOptimizer::LevenbergMarquardt);
@@ -200,14 +202,12 @@ namespace g2o
     {
       inputs.declare<Eigen::SparseMatrix<int> >("x", "The n_view by n_points matrix of x.").required(true);
       inputs.declare<Eigen::SparseMatrix<int> >("y", "The n_view by n_points matrix of y.").required(true);
-      inputs.declare<std::vector<Eigen::Quaterniond> >("quaternions", "The initial estimates of the camera rotations.").required(
-          true);
-      inputs.declare<std::vector<Eigen::Vector3d> >("Ts", "The initial estimates of the camera translations.").required(
-          true);
+      inputs.declare<VectorQuaterniond>("quaternions", "The initial estimates of the camera rotations.").required(true);
+      inputs.declare<VectorVector3d>("Ts", "The initial estimates of the camera translations.").required(true);
       inputs.declare<Eigen::Matrix3d>("K", "The intrinsic parameter matrix.").required(true);
-      inputs.declare<std::vector<Eigen::Vector3d> >("points", "The estimated 3d points.").required(true);
+      inputs.declare<VectorVector3d>("points", "The estimated 3d points.").required(true);
 
-      outputs.declare<std::vector<Eigen::Vector3d> >("points", "The optimized positions of the points.");
+      outputs.declare<VectorVector3d>("points", "The optimized positions of the points.");
     }
 
     void
@@ -235,11 +235,11 @@ namespace g2o
   private:
     ecto::spore<Eigen::SparseMatrix<int> > x_;
     ecto::spore<Eigen::SparseMatrix<int> > y_;
-    ecto::spore<std::vector<Eigen::Quaterniond> > quaternions_;
-    ecto::spore<std::vector<Eigen::Vector3d> > Ts_;
+    ecto::spore<VectorQuaterniond> quaternions_;
+    ecto::spore<VectorVector3d> Ts_;
     ecto::spore<Eigen::Matrix3d> K_;
-    ecto::spore<std::vector<Eigen::Vector3d> > in_point_estimates_;
-    ecto::spore<std::vector<Eigen::Vector3d> > out_point_estimates_;
+    ecto::spore<VectorVector3d> in_point_estimates_;
+    ecto::spore<VectorVector3d> out_point_estimates_;
   };
 }
 
