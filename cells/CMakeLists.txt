@@ -8,6 +8,7 @@ ecto_python_env_gen(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 ectomodule(g2o
    module.cpp
    Sba.cpp
+   SbaDisparity.cpp
 )
 
 link_ecto(g2o

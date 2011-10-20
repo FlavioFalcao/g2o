@@ -45,16 +45,16 @@
 namespace g2o
 {
   void
+  sba_process_impl(const Eigen::SparseMatrix<int> &x, const Eigen::SparseMatrix<int> & y,
+                   const Eigen::SparseMatrix<int> & disparity, const Eigen::Matrix3d & K,
+                   const std::vector<Eigen::Quaterniond> & quaternions, const std::vector<Eigen::Vector3d> & Ts,
+                   const std::vector<Eigen::Vector3d> & in_point_estimates,
+                   std::vector<Eigen::Vector3d> & out_point_estimates);
+  void
   sba_process_impl(const Eigen::SparseMatrix<int> &x, const Eigen::SparseMatrix<int> & y, const Eigen::Matrix3d & K,
                    const std::vector<Eigen::Quaterniond> & quaternions, const std::vector<Eigen::Vector3d> & Ts,
                    const std::vector<Eigen::Vector3d> & in_point_estimates,
                    std::vector<Eigen::Vector3d> & out_point_estimates);
-/*void
- sba_process_impl(const Eigen::SparseMatrix<int> &x, const Eigen::SparseMatrix<int> & y,
- const Eigen::SparseMatrix<int> & disparity, const Eigen::Matrix3d & K,
- const std::vector<Eigen::Quaterniond> & quaternions, const std::vector<Eigen::Vector3d> & Ts,
- const std::vector<Eigen::Vector3d> & in_point_estimates,
- std::vector<Eigen::Vector3d> & out_point_estimates);*/
 }
 
 #endif /* SBA_H_ */

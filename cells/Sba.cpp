@@ -200,8 +200,6 @@ namespace g2o
     {
       inputs.declare<Eigen::SparseMatrix<int> >("x", "The n_view by n_points matrix of x.").required(true);
       inputs.declare<Eigen::SparseMatrix<int> >("y", "The n_view by n_points matrix of y.").required(true);
-      inputs.declare<Eigen::SparseMatrix<int> >("disparity", "The n_view by n_points matrix of disparity.").required(
-          true);
       inputs.declare<std::vector<Eigen::Quaterniond> >("quaternions", "The initial estimates of the camera rotations.").required(
           true);
       inputs.declare<std::vector<Eigen::Vector3d> >("Ts", "The initial estimates of the camera translations.").required(

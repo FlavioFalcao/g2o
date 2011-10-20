@@ -93,6 +93,8 @@ TEST(g2o, SBA)
   K(1, 2) = principal_point[1];
 
 // set up 5 vertices, first 2 fixed
+  double baseline = 7.5;
+  g2o::VertexSCam::setKcam(K(0, 0), K(1, 1), K(0, 2), K(1, 2), baseline);
   int vertex_id = 0;
   std::vector<Eigen::Quaterniond> quaternions;
   std::vector<Eigen::Vector3d> Ts;
@@ -124,6 +126,7 @@ TEST(g2o, SBA)
   std::cout << "n: " << n_points << " " << n_views << std::endl;
   Eigen::SparseMatrix<int> x(n_views, n_points);
   Eigen::SparseMatrix<int> y(n_views, n_points);
+  Eigen::SparseMatrix<int> disparity(n_views, n_points);
   std::vector<Eigen::Vector3d> in_point_estimates(n_points);
   for (size_t i = 0; i < n_points; ++i)
   {
@@ -144,7 +147,7 @@ TEST(g2o, SBA)
                              Sample::gaussian(PIXEL_NOISE / 16.0));
         x.coeffRef(j, i) = z[0];
         y.coeffRef(j, i) = z[1];
-
+        disparity.coeffRef(j, i) = z[2];
       }
 
       Eigen::Vector3d diff = estimate - true_points[i];
@@ -155,7 +158,7 @@ TEST(g2o, SBA)
   }
 
   std::vector<Eigen::Vector3d> out_point_estimates;
-  g2o::sba_process_impl(x, y, K, quaternions, Ts, in_point_estimates, out_point_estimates);
+  g2o::sba_process_impl(x, y, disparity, K, quaternions, Ts, in_point_estimates, out_point_estimates);
   /*
    std::cout << "Point error before optimisation (inliers only): " << sqrt(sum_diff2 / point_num) << std::endl;
 

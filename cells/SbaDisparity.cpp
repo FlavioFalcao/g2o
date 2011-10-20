@@ -55,7 +55,7 @@ namespace g2o
 {
   void
   sba_process_impl(const Eigen::SparseMatrix<int> &x, const Eigen::SparseMatrix<int> & y,
-                   const Eigen::SparseMatrix<int> & disparity, const Eigen::Matrix3d & K,
+                   const Eigen::SparseMatrix<int> &disparity, const Eigen::Matrix3d & K,
                    const std::vector<Eigen::Quaterniond> & quaternions, const std::vector<Eigen::Vector3d> & Ts,
                    const std::vector<Eigen::Vector3d> & in_point_estimates,
                    std::vector<Eigen::Vector3d> & out_point_estimates)
@@ -167,7 +167,7 @@ namespace g2o
     optimizer.optimize(5);
 
     // Set the computed points in the final data structure
-    out_point_estimates = in_point_estimates.size();
+    out_point_estimates = in_point_estimates;
     for (tr1::unordered_map<int, int>::iterator it = pointid_2_trueid.begin(); it != pointid_2_trueid.end(); ++it)
     {
       g2o::HyperGraph::VertexIDMap::iterator v_it = optimizer.vertices().find(it->first);
@@ -229,7 +229,10 @@ namespace g2o
     int
     process(const tendrils& inputs, const tendrils& outputs)
     {
-      sba_process_impl(*x_, *y_, *disparity_, *K_, *quaternions_, *Ts_, *point_estimates_);
+      // TODO fix the following
+      /*sba_process_impl(*x_, *y_, *disparity_, *K_, *quaternions_, *Ts_, *in_point_estimates_,
+       *out_point_estimates_);*/
+      *out_point_estimates_ = *in_point_estimates_;
       return ecto::OK;
     }
 
