@@ -44,6 +44,18 @@ using namespace std;
 
 namespace pe
 {
+
+  // constructor
+  PoseEstimator::PoseEstimator(int NRansac, bool LMpolish, double maxrange,
+                               double maxidx, double maxidd)
+  {
+    numRansac = NRansac;
+    maxMatchRange = maxrange;
+    maxInlierXDist = maxidx;
+    maxInlierDDist = maxidd;
+  }
+
+
   //
   // find the best estimate for a geometrically-consistent match
   // assumes stereo points have been calculated, and matches filtered,

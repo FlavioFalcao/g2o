@@ -76,7 +76,12 @@ namespace pe
     /// Whether to do windowed or whole-image matching.
     int windowed;
 
-    PoseEstimator(int NRansac, bool LMpolish, double mind,
+    /// \brief Initialize a pose estimator
+    /// NRansac is number of ransac iterations
+    /// LMpolish is true for bundle-adjusting the result
+    /// maxrange is max Z dist on points (in meters) to participate in pose hypotheses
+    /// maxidx and maxidd are inlier bounds for feature point and disparity projections
+    PoseEstimator(int NRansac, bool LMpolish, double maxrange,
                   double maxidx, double maxidd);
     ~PoseEstimator() { }
 
@@ -102,7 +107,7 @@ namespace pe
     Eigen::Vector3f trans; ///< Translation of the camera between the frames.
 
     // inliers
-    matches_t &inliers;
+    matches_t inliers;
   };
 
 
