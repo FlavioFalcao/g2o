@@ -66,7 +66,7 @@ namespace pe
   //
 
   int PoseEstimator::estimate(const matches_t &matches, 
-                              const points_t &train_kpts, const points_t &query_kpts,
+                              const kpts_t &train_kpts, const kpts_t &query_kpts,
                               const points3d_t &train_pts, const points3d_t &query_pts,
                               image_pipeline::PinholeCameraModel &pm, double baseline)
   {
@@ -78,7 +78,7 @@ namespace pe
     for (int i=0; i<nmatch; i++)
       {
         if (query_pts[matches[i].queryIdx].z < maxMatchRange && 
-            train_pts[matches[i].trainIdx].z > maxMatchRange)
+            train_pts[matches[i].trainIdx].z < maxMatchRange)
           {
             m0.push_back(matches[i].queryIdx);
             m1.push_back(matches[i].trainIdx);
@@ -86,6 +86,7 @@ namespace pe
       }
 
     nmatch = m0.size();
+    //    cout << "RANSAC runs " << numRansac << " times with " << nmatch << " matches" << endl;
     if (nmatch < 3) return 0;   // can't do it...
 
     int bestinl = 0;
@@ -200,10 +201,11 @@ namespace pe
             Vector3f pt = Rf*pt1+trf; // transform query point
             Vector3f ipt = Kf*pt;
             float iz = 1.0/ipt.z();
-            const cv::Point2f &kp = query_kpts[m0[i]];
+            const cv::Point2f &kp = query_kpts[m0[i]].pt;
             float dx = kp.x - ipt.x()*iz;
             float dy = kp.y - ipt.y()*iz;
-            float dd = fb/(query_pts[m0[i]].z - ipt.z());
+            float dd = fb/query_pts[m0[i]].z - fb/ipt.z();
+            //            cout << dx << " " << dy << " " << dd << endl;
             if (dx*dx < maxInlierXDist2 && dy*dy < maxInlierXDist2 && 
                 dd*dd < maxInlierDDist2)
                //              inl+=(int)fsqrt(ipt.z()); // clever way to weight closer points
@@ -237,14 +239,16 @@ namespace pe
         Vector3f pt = rot*pt1+trans; // transform query point
         Vector3f ipt = Kf*pt;
         float iz = 1.0/ipt.z();
-        const cv::Point2f &kp = query_kpts[m0[i]];
+        const cv::Point2f &kp = query_kpts[m0[i]].pt;
         float dx = kp.x - ipt.x()*iz;
         float dy = kp.y - ipt.y()*iz;
-        float dd = fb/(query_pts[m0[i]].z - ipt.z());
+        float dd = fb/query_pts[m0[i]].z - fb/ipt.z();
+        //        cout << dx << " " << dy << " " << dd << endl;
         if (dx*dx < maxInlierXDist2 && dy*dy < maxInlierXDist2 && 
             dd*dd < maxInlierDDist2)
           inls.push_back(matches[i]); 
       }
+    inliers = inls;
 
 #if 0
     cout << endl << trans.transpose().head(3) << endl << endl;

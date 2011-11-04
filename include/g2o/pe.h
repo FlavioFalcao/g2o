@@ -95,7 +95,7 @@ namespace pe
     /// optionally polishes the result.
     /// Depth is interpreted as disparities via focal length and baseline
     int estimate(const matches_t &matches, 
-                 const points_t &train_kpts, const points_t &query_kpts,
+                 const kpts_t &train_kpts, const kpts_t &query_kpts,
                  const points3d_t &train_pts, const points3d_t &query_pts,
                  image_pipeline::PinholeCameraModel &pm, double baseline = 0);
 
