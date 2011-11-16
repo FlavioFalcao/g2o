@@ -11,6 +11,7 @@
 #include <numeric>
 #include <functional>
 #include <stdio.h>
+#include <time.h>
 
 using namespace cv;
 using namespace pe;
@@ -406,6 +407,8 @@ int main(int argc, char **argv)
   vector<int> indices;
   points3d_t points1, points2;
   
+  srand ( time(NULL) );
+
   generateData(intrinsics, R, T, kpts1, kpts2, indices, points1);
   std::cout << R << std::endl;
   std::cout << T << std::endl << std::endl;
