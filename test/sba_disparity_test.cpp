@@ -1,3 +1,5 @@
+#include <cstdlib>
+#include <stdlib.h>
 #include <iostream>
 #include <stdint.h>
 #include <vector>
@@ -134,6 +136,7 @@ TEST(g2o, SBA)
                                + Eigen::Vector3d(Sample::gaussian(1), Sample::gaussian(1), Sample::gaussian(1));
     in_point_estimates[i] = estimate;
 
+    bool is_random = (std::rand() % 10) > 9;
     for (size_t j = 0; j < n_views; ++j)
     {
       Eigen::Vector3d z;
@@ -141,13 +144,13 @@ TEST(g2o, SBA)
 
       if (z[0] >= 0 && z[1] >= 0 && z[0] < 640 && z[1] < 480)
       {
-        Eigen::Vector3d z;
-
-        z += Eigen::Vector3d(Sample::gaussian(PIXEL_NOISE), Sample::gaussian(PIXEL_NOISE),
-                             Sample::gaussian(PIXEL_NOISE / 16.0));
+        Eigen::Vector3d z = Eigen::Vector3d(Sample::gaussian(PIXEL_NOISE), Sample::gaussian(PIXEL_NOISE),
+                                            Sample::gaussian(PIXEL_NOISE / 16.0));
         x.insert(j, i) = z[0];
         y.insert(j, i) = z[1];
         disparity.insert(j, i) = z[2];
+        if (is_random)
+          break;
       }
     }
 

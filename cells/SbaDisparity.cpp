@@ -105,12 +105,6 @@ namespace g2o
     // add point projections to this vertex
     for (size_t i = 0; i < in_point_estimates.size(); ++i)
     {
-      g2o::VertexPointXYZ * v_p = new g2o::VertexPointXYZ();
-
-      v_p->setId(point_id);
-      v_p->setMarginalized(true);
-      v_p->estimate() = in_point_estimates.at(i);
-
       // First, make sure, the point is visible in several views
       {
         unsigned int count = 0;
@@ -125,6 +119,14 @@ namespace g2o
         if (count < 2)
           continue;
       }
+
+      // Add the point to the optimizer
+      g2o::VertexPointXYZ * v_p = new g2o::VertexPointXYZ();
+
+      v_p->setId(point_id);
+      v_p->setMarginalized(true);
+      v_p->estimate() = in_point_estimates.at(i);
+
       // Add the different views to the optimizer
       for (size_t j = 0; j < quaternions.size(); ++j)
       {
@@ -143,8 +145,7 @@ namespace g2o
         e->inverseMeasurement() = -z;
         e->information() = Matrix3d::Identity();
 
-        // TODO
-        //e->setRobustKernel(ROBUST_KERNEL);
+        e->setRobustKernel(true);
         e->setHuberWidth(1);
 
         optimizer.addEdge(e);
@@ -226,9 +227,11 @@ namespace g2o
     process(const tendrils& inputs, const tendrils& outputs)
     {
       // TODO fix the following
-      /*sba_process_impl(*x_, *y_, *disparity_, *K_, *quaternions_, *Ts_, *in_point_estimates_,
-       *out_point_estimates_);*/
+#if 0
+      sba_process_impl(*x_, *y_, *disparity_, *K_, *quaternions_, *Ts_, *in_point_estimates_, *out_point_estimates_);
+#else
       *out_point_estimates_ = *in_point_estimates_;
+#endif
       return ecto::OK;
     }
 
