@@ -26,13 +26,4 @@ target_link_libraries(g2o_test
 
 #add_test(g2o_tests ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/g2o_test)
 
-add_executable(pe_planar_test
-  pe_planar_test.cpp
-  )
 
-target_link_libraries(pe_planar_test
-  ${GTEST_LIBRARIES}
-  pthread
-  core solver_cholmod math_groups types_sba types_slam3d types_icp ${OPENGL_LIBRARIES} ${CHOLMOD_LIBRARIES}
-  g2o_ectomodule
-  )
