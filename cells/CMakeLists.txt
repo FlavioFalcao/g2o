@@ -16,7 +16,6 @@ ectomodule(g2o
    module.cpp
    Sba.cpp
    SbaDisparity.cpp
-   pe3d.cpp
 )
 
 link_ecto(g2o
