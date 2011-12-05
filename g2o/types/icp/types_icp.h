@@ -369,6 +369,7 @@ namespace g2o {
     // return the error estimate as a 2-vector
     void computeError()
     {
+      //      cout << "[Edge_XYZ_VSC] compute error]" << endl;
       // from <Point> to <Cam>
       const VertexPointXYZ *point = static_cast<const VertexPointXYZ*>(_vertices[0]);
       VertexSCam *cam = static_cast<VertexSCam*>(_vertices[1]);
@@ -388,6 +389,7 @@ namespace g2o {
       // error, which is backwards from the normal observed - calculated
       // _measurement is the measured projection
       _error = kp - _measurement;
+      cout << "[Error] " << _error.transpose() << endl;
     }
 #ifdef SCAM_ANALYTIC_JACOBIANS
     // jacobian

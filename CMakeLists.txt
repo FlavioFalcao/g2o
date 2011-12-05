@@ -1,6 +1,19 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
 PROJECT(g2o)
+set(g2o_MAJOR_VERSION 0)
+set(g2o_MINOR_VERSION 1)
+set(g2o_PATCH_VERSION 0)
+set(g2o_SOVERSION 
+  ${g2o_MAJOR_VERSION}.${g2o_MINOR_VERSION}
+)
+set(g2o_VERSION 
+  ${g2o_MAJOR_VERSION}.${g2o_MINOR_VERSION}.${g2o_PATCH_VERSION}
+)
+
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
 
 add_definitions("-Wno-unused-parameter")
 # The library prefix
@@ -139,3 +152,6 @@ if(BUILD_ECTO_CELLS)
   add_subdirectory(cells)
 endif()
 
+#these setup the lib to be used by others
+include(cmake/install.cmake)
+include(cmake/config.cmake)
