@@ -56,7 +56,7 @@ namespace g2o {
     if (foundIt != _creator.end()) {
       _creator.erase(foundIt);
       cerr << "SOLVER FACTORY WARNING: Overwriting Solver _creator " << name << endl;
-      assert(0);
+      //      assert(0);
     }
     _creator.push_back(c);
   }

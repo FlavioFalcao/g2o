@@ -356,6 +356,7 @@ namespace g2o {
 
 // stereo projection
 // first two args are the measurement type, second two the connection classes
+// measurements are x,y keypoint, and x' right image keypoing (< x)
   class Edge_XYZ_VSC : public  BaseBinaryEdge<3, Vector3d, VertexPointXYZ, VertexSCam>
 {
   public:
@@ -366,9 +367,10 @@ namespace g2o {
     virtual bool read(std::istream& is);
     virtual bool write(std::ostream& os) const;
 
-    // return the error estimate as a 2-vector
+    // return the error estimate as a 3-vector
     void computeError()
     {
+      //      cout << "[Edge_XYZ_VSC] compute error]" << endl;
       // from <Point> to <Cam>
       const VertexPointXYZ *point = static_cast<const VertexPointXYZ*>(_vertices[0]);
       VertexSCam *cam = static_cast<VertexSCam*>(_vertices[1]);
@@ -378,16 +380,15 @@ namespace g2o {
       Vector3d kp;
       cam->mapPoint(kp,point->estimate());
 
-      // std::cout << std::endl << "CAM   " << cam->estimate() << std::endl;
-      // std::cout << "POINT " << pt.transpose() << std::endl;
-      // std::cout << "PROJ  " << p1.transpose() << std::endl;
-      // std::cout << "PROJ  " << p2.transpose() << std::endl;
-      // std::cout << "CPROJ " << kp.transpose() << std::endl;
-      // std::cout << "MEAS  " << _measurement.transpose() << std::endl;
+      //std::cout << std::endl << "CAM   " << cam->estimate() << std::endl;
+      //std::cout << "POINT " << point->estimate().transpose() << std::endl;
+      //std::cout << "CPROJ " << kp.transpose() << std::endl;
+      //std::cout << "MEAS  " << _measurement.transpose() << std::endl;
 
       // error, which is backwards from the normal observed - calculated
       // _measurement is the measured projection
       _error = kp - _measurement;
+      //cout << "[ICP Error] " << _error.transpose() << endl;
     }
 #ifdef SCAM_ANALYTIC_JACOBIANS
     // jacobian
