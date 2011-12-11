@@ -6,5 +6,20 @@ set(g2o_INCLUDE_DIRS
   ${EIGEN_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
 )
+foreach(lib @g2o_LIBS@)
+    if(g2o_SOURCE_DIR)
+        set(onelib ${lib})
+    else()
+        set(onelib "${lib}-NOTFOUND")
+        find_library(onelib ${lib}
+            PATHS @CMAKE_LIBRARY_OUTPUT_DIRECTORY@;@CMAKE_INSTALL_PREFIX@/lib
+            NO_DEFAULT_PATH
+        )
+        if(NOT onelib)
+            message(FATAL_ERROR "Library '${lib}' in package g2o is not installed properly")
+        endif()
+    endif()
+    list(APPEND g2o_LIBS ${onelib})
+endforeach()
 
-set(g2o_LIBS @g2o_LIBS@)
+
