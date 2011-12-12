@@ -1,25 +1,21 @@
-set(g2o_INCLUDE_DIRS
-    ${PROJECT_SOURCE_DIR}
-    ${PROJECT_SOURCE_DIR}/include #g2o/sba.h
-    ${PROJECT_BINARY_DIR} #g2o/config.h
-    /usr/include/suitesparse
-    )
-# FIXME: suitesparse??? This should be done with a find_package(...)
+set(g2o_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include 
+  ${PROJECT_SOURCE_DIR} /usr/include/suitesparse)
+# FIXME: suitesparse???
 
-set(g2o_LIBS  
-  core
-  solver_csparse
-  stuff
-  types_sim3
-  math_groups
-  solver_dense
-  types_icp
-  types_slam2d
-  solver_cholmod
-  solver_pcg
-  types_sba
-  types_slam3d
-  )
+set(g2o_LIBS 
+#  ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/g2o.so
+  ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libg2o_core.so
+  ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libg2o_solver_csparse.so
+  ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libg2o_stuff.so
+  ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libg2o_types_sim3.so
+  ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libg2o_math_groups.so
+  ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libg2o_solver_dense.so
+  ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libg2o_types_icp.so
+  ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libg2o_types_slam2d.so
+  ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libg2o_solver_cholmod.so
+  ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libg2o_solver_pcg.so
+  ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libg2o_types_sba.so
+  ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libg2o_types_slam3d.so)
 
 configure_file(cmake/g2oConfig.cmake.in
   ${CMAKE_BINARY_DIR}/g2oConfig.cmake
