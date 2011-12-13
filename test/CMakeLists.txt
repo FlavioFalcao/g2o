@@ -9,8 +9,6 @@ include_directories(${GTEST_INCLUDE_DIRS})
 
 find_package(OpenCV REQUIRED)
 find_package(Eigen REQUIRED)
-find_package(image_pipeline 0.1.0 REQUIRED)
-include_directories(${image_pipeline_INCLUDE_DIRS})
 
 add_executable(g2o_test
   main.cpp
