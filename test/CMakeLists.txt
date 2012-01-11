@@ -23,5 +23,3 @@ target_link_libraries(g2o_test
   )
 
 add_test(g2o_tests ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/g2o_test)
-
-
