@@ -10,8 +10,6 @@ include_directories(${image_pipeline_INCLUDE_DIRS})
 
 # target_link_libraries(my_thing ${image_pipeline_LIBRARIES})
 
-ecto_python_env_gen(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-
 ectomodule(g2o
    module.cpp
    Sba.cpp

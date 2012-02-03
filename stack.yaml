@@ -1,0 +1,11 @@
+Catkin-ProjectName: g2o
+Version: 0.2.3
+Description: Bundle adjustment code
+Author: Rainer Kuemmerle, Giorgio Grisetti, Hauke Strasdat, Kurt Konolige, Wolfram Burgard
+Maintainer:  Vincent Rabaud <vrabaud@willowgarage.com>
+Homepage:  http://ecto.willowgarage.com/recognition
+
+Depends: catkin, ecto
+
+Catkin-CopyrightType:  willowgarage
+Catkin-DebRulesType: cmake
