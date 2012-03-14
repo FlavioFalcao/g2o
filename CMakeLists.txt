@@ -1,5 +1,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
+find_package(ecto QUIET)
+
 PROJECT(g2o)
 set(g2o_MAJOR_VERSION 0)
 set(g2o_MINOR_VERSION 1)
