@@ -5,7 +5,7 @@ Author: Rainer Kuemmerle, Giorgio Grisetti, Hauke Strasdat, Kurt Konolige, Wolfr
 Maintainer:  Vincent Rabaud <vrabaud@willowgarage.com>
 Homepage:  http://ecto.willowgarage.com/recognition
 
-Depends: catkin, ecto
+Depends: catkin, ecto, ecto_image_pipeline
 
 Catkin-CopyrightType:  willowgarage
 Catkin-DebRulesType: cmake
