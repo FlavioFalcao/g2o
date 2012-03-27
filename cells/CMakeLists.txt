@@ -6,6 +6,9 @@ endif()
 find_package(OpenCV REQUIRED)
 find_package(Eigen REQUIRED)
 find_package(ecto_image_pipeline REQUIRED)
+
+set_ecto_install_package_name()
+
 include_directories(${ecto_image_pipeline_INCLUDE_DIRS})
 
 ectomodule(g2o
